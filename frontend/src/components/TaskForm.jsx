@@ -29,11 +29,14 @@ export default function TaskForm({ task, onSave, onCancel }) {
     setLoading(true)
     setError('')
 
+    const { data: { user } } = await supabase.auth.getUser()
+
     const payload = {
       title: fields.title.trim(),
       description: fields.description.trim() || null,
       status: fields.status,
       due_date: fields.due_date || null,
+      user_id: user.id,
     }
 
     let result
