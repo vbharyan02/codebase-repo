@@ -1,54 +1,56 @@
-# expense-tracker — Database Setup
+# todo-app — Database Setup
 
-## Running the SQL files
+## How to run
 
-### 1. schema.sql (required first)
+### 1. Run schema.sql
 1. Open your Supabase project dashboard
-2. Navigate to **SQL Editor**
-3. Paste the contents of `schema.sql`
-4. Click **Run**
+2. Go to **SQL Editor** (left sidebar)
+3. Click **New query**
+4. Paste the contents of `schema.sql`
+5. Click **Run**
 
-This creates the `expenses` table, user_id index, and the `updated_at` auto-update trigger.
+### 2. Run rls.sql
+After schema.sql succeeds:
+1. Open a new SQL Editor query
+2. Paste the contents of `rls.sql`
+3. Click **Run**
 
-### 2. rls.sql (required, run after schema.sql)
-1. In **SQL Editor**, paste the contents of `rls.sql`
-2. Click **Run**
+### 3. Run seed.sql (optional, for testing)
+Before running seed.sql:
+- Create a test user via Supabase Auth (Dashboard → Authentication → Users → Invite)
+- Replace the placeholder UUID `00000000-0000-0000-0000-000000000001` in `seed.sql` with the real user's UUID
 
-This enables Row Level Security and adds four policies so users can only access their own rows.
-
-### 3. seed.sql (optional — for testing)
-1. Create a test user via Supabase Auth (Dashboard → Authentication → Users → Add user)
-2. Copy the user's UUID
-3. Replace `00000000-0000-0000-0000-000000000001` in `seed.sql` with that UUID
-4. Paste into **SQL Editor** and click **Run**
-
----
-
-## Table structure
-
-### `expenses`
-
-| Column       | Type        | Nullable | Notes                                  |
-|--------------|-------------|----------|----------------------------------------|
-| id           | UUID        | NO       | Primary key, auto-generated            |
-| user_id      | UUID        | NO       | FK → auth.users(id) ON DELETE CASCADE  |
-| title        | TEXT        | NO       |                                        |
-| amount       | INTEGER     | NO       | Amount in smallest currency unit       |
-| category     | TEXT        | NO       |                                        |
-| notes        | TEXT        | YES      |                                        |
-| expense_date | DATE        | NO       |                                        |
-| created_at   | TIMESTAMPTZ | NO       | Set on insert                          |
-| updated_at   | TIMESTAMPTZ | NO       | Auto-updated on every UPDATE           |
+Then:
+1. Open a new SQL Editor query
+2. Paste the contents of `seed.sql`
+3. Click **Run**
 
 ---
 
-## RLS policy summary
+## Table Structure
 
-All four policies on `expenses` check `auth.uid() = user_id`:
+### `todos`
 
-| Policy            | Operation | Effect                                      |
-|-------------------|-----------|---------------------------------------------|
-| expenses_select   | SELECT    | Users can only read their own expenses      |
-| expenses_insert   | INSERT    | Users can only insert rows with their uid   |
-| expenses_update   | UPDATE    | Users can only update their own expenses    |
-| expenses_delete   | DELETE    | Users can only delete their own expenses    |
+| Column         | Type        | Nullable | Default              | Notes                        |
+|----------------|-------------|----------|----------------------|------------------------------|
+| `id`           | UUID        | NO       | `gen_random_uuid()`  | Primary key                  |
+| `user_id`      | UUID        | NO       |                      | FK → `auth.users(id)` CASCADE|
+| `title`        | TEXT        | NO       |                      |                              |
+| `description`  | TEXT        | YES      |                      |                              |
+| `is_completed` | BOOLEAN     | NO       | `false`              |                              |
+| `due_date`     | DATE        | YES      |                      |                              |
+| `created_at`   | TIMESTAMPTZ | NO       | `NOW()`              |                              |
+| `updated_at`   | TIMESTAMPTZ | NO       | `NOW()`              | Auto-updated via trigger     |
+
+---
+
+## RLS Policy Summary
+
+All policies on `todos` restrict access so that **each user can only see and modify their own rows** (`auth.uid() = user_id`).
+
+| Policy          | Operation | Rule                        |
+|-----------------|-----------|-----------------------------|
+| `todos_select`  | SELECT    | `auth.uid() = user_id`      |
+| `todos_insert`  | INSERT    | `auth.uid() = user_id`      |
+| `todos_update`  | UPDATE    | `auth.uid() = user_id`      |
+| `todos_delete`  | DELETE    | `auth.uid() = user_id`      |
