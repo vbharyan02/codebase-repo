@@ -3,7 +3,8 @@ import useAuthStore from '../store/authStore'
 
 const navItems = [
   { to: '/', label: 'Dashboard' },
-  { to: '/todos', label: 'Todos' },
+  { to: '/expenses', label: 'Expenses' },
+  { to: '/categories', label: 'Categories' },
 ]
 
 export default function Layout({ children }) {
@@ -18,9 +19,9 @@ export default function Layout({ children }) {
   return (
     <div className="min-h-screen flex flex-col md:flex-row bg-gray-50">
       {/* Sidebar */}
-      <aside className="w-full md:w-56 bg-indigo-700 text-white flex md:flex-col">
-        <div className="flex items-center justify-between md:justify-center px-4 py-4 border-b border-indigo-600">
-          <Link to="/" className="text-xl font-bold tracking-tight">Todo App</Link>
+      <aside className="w-full md:w-56 bg-emerald-700 text-white flex md:flex-col">
+        <div className="flex items-center justify-between md:justify-center px-4 py-4 border-b border-emerald-600">
+          <Link to="/" className="text-xl font-bold tracking-tight">Expense Tracker</Link>
         </div>
         <nav className="flex md:flex-col gap-1 px-2 py-2 flex-1 overflow-x-auto md:overflow-x-visible">
           {navItems.map(({ to, label }) => (
@@ -31,8 +32,8 @@ export default function Layout({ children }) {
               className={({ isActive }) =>
                 `px-4 py-2 rounded-md text-sm font-medium whitespace-nowrap transition-colors ${
                   isActive
-                    ? 'bg-indigo-900 text-white'
-                    : 'text-indigo-100 hover:bg-indigo-600'
+                    ? 'bg-emerald-900 text-white'
+                    : 'text-emerald-100 hover:bg-emerald-600'
                 }`
               }
             >
@@ -40,11 +41,11 @@ export default function Layout({ children }) {
             </NavLink>
           ))}
         </nav>
-        <div className="px-4 py-4 border-t border-indigo-600 md:mt-auto">
-          <p className="text-xs text-indigo-200 truncate mb-2">{user?.email}</p>
+        <div className="px-4 py-4 border-t border-emerald-600 md:mt-auto">
+          <p className="text-xs text-emerald-200 truncate mb-2">{user?.email}</p>
           <button
             onClick={handleSignOut}
-            className="w-full text-left text-sm text-indigo-100 hover:text-white hover:underline"
+            className="w-full text-left text-sm text-emerald-100 hover:text-white hover:underline"
           >
             Sign out
           </button>

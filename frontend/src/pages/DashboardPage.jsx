@@ -1,63 +1,65 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import Layout from '../components/Layout'
-import TodoCard from '../components/TodoCard'
+import ExpenseCard from '../components/ExpenseCard'
 import supabase from '../lib/supabase'
 
 export default function DashboardPage() {
-  const [todos, setTodos] = useState([])
+  const [expenses, setExpenses] = useState([])
+  const [categories, setCategories] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
   useEffect(() => {
-    const fetchTodos = async () => {
+    const fetchData = async () => {
       setLoading(true)
-      const { data, error: err } = await supabase
-        .from('todos')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(5)
+      const [expRes, catRes] = await Promise.all([
+        supabase
+          .from('expenses')
+          .select('*')
+          .order('date', { ascending: false })
+          .limit(5),
+        supabase.from('categories').select('*'),
+      ])
 
-      if (err) {
-        setError('Failed to load todos.')
+      if (expRes.error) {
+        setError('Failed to load expenses.')
       } else {
-        setTodos(data)
+        setExpenses(expRes.data)
+      }
+      if (!catRes.error) {
+        setCategories(catRes.data)
       }
       setLoading(false)
     }
-
-    fetchTodos()
+    fetchData()
   }, [])
 
-  const handleToggle = async (todo) => {
-    const { error: err } = await supabase
-      .from('todos')
-      .update({ completed: !todo.completed })
-      .eq('id', todo.id)
-
-    if (err) {
-      setError('Failed to update todo.')
-      return
-    }
-    setTodos((prev) =>
-      prev.map((t) => (t.id === todo.id ? { ...t, completed: !t.completed } : t))
-    )
-  }
+  const categoryMap = Object.fromEntries(categories.map((c) => [c.id, c]))
 
   const handleDelete = async (id) => {
-    const { error: err } = await supabase.from('todos').delete().eq('id', id)
+    const { error: err } = await supabase.from('expenses').delete().eq('id', id)
     if (err) {
-      setError('Failed to delete todo.')
+      setError('Failed to delete expense.')
       return
     }
-    setTodos((prev) => prev.filter((t) => t.id !== id))
+    setExpenses((prev) => prev.filter((e) => e.id !== id))
   }
 
-  const total = todos.length
-  const completed = todos.filter((t) => t.completed).length
-  const pending = total - completed
+  // Stats derived from fetched (recent 5) — full stats would need a separate query
+  const totalSpend = expenses.reduce((sum, e) => sum + Number(e.amount), 0)
 
-  const highPriority = todos.filter((t) => t.priority === 'high' && !t.completed).length
+  // Category breakdown from recent expenses
+  const categoryTotals = expenses.reduce((acc, e) => {
+    const key = e.category_id ?? '__none'
+    acc[key] = (acc[key] ?? 0) + Number(e.amount)
+    return acc
+  }, {})
+
+  const topCategory = Object.entries(categoryTotals).sort((a, b) => b[1] - a[1])[0]
+  const topCategoryName = topCategory
+    ? categoryMap[topCategory[0]]?.name ?? 'Uncategorized'
+    : '—'
 
   return (
     <Layout>
@@ -66,22 +68,24 @@ export default function DashboardPage() {
 
         {/* Stats */}
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-8">
-          {[
-            { label: 'Total (recent)', value: total, color: 'indigo' },
-            { label: 'Completed', value: completed, color: 'green' },
-            { label: 'High Priority', value: highPriority, color: 'red' },
-          ].map(({ label, value, color }) => (
-            <div key={label} className="bg-white border rounded-lg p-4 shadow-sm text-center">
-              <p className={`text-3xl font-bold text-${color}-600`}>{value}</p>
-              <p className="text-xs text-gray-500 mt-1">{label}</p>
-            </div>
-          ))}
+          <div className="bg-white border rounded-lg p-4 shadow-sm text-center">
+            <p className="text-3xl font-bold text-emerald-600">${totalSpend.toFixed(2)}</p>
+            <p className="text-xs text-gray-500 mt-1">Recent Spend (5)</p>
+          </div>
+          <div className="bg-white border rounded-lg p-4 shadow-sm text-center">
+            <p className="text-3xl font-bold text-blue-600">{expenses.length}</p>
+            <p className="text-xs text-gray-500 mt-1">Recent Expenses</p>
+          </div>
+          <div className="bg-white border rounded-lg p-4 shadow-sm text-center col-span-2 sm:col-span-1">
+            <p className="text-lg font-bold text-purple-600 truncate">{topCategoryName}</p>
+            <p className="text-xs text-gray-500 mt-1">Top Category</p>
+          </div>
         </div>
 
-        {/* Recent todos */}
+        {/* Recent expenses */}
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-lg font-semibold text-gray-700">Recent Todos</h2>
-          <Link to="/todos" className="text-sm text-indigo-600 hover:underline">
+          <h2 className="text-lg font-semibold text-gray-700">Recent Expenses</h2>
+          <Link to="/expenses" className="text-sm text-emerald-600 hover:underline">
             View all →
           </Link>
         </div>
@@ -94,23 +98,23 @@ export default function DashboardPage() {
 
         {loading ? (
           <div className="flex justify-center py-12">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600" />
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600" />
           </div>
-        ) : todos.length === 0 ? (
+        ) : expenses.length === 0 ? (
           <div className="text-center py-12 text-gray-400 text-sm">
-            No todos yet.{' '}
-            <Link to="/todos" className="text-indigo-600 hover:underline">
-              Create one
+            No expenses yet.{' '}
+            <Link to="/expenses" className="text-emerald-600 hover:underline">
+              Add one
             </Link>
             .
           </div>
         ) : (
           <div className="space-y-3">
-            {todos.map((todo) => (
-              <TodoCard
-                key={todo.id}
-                todo={todo}
-                onToggle={handleToggle}
+            {expenses.map((expense) => (
+              <ExpenseCard
+                key={expense.id}
+                expense={expense}
+                categoryMap={categoryMap}
                 onDelete={handleDelete}
               />
             ))}
