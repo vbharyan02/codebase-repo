@@ -1,25 +1,7 @@
--- ============================================================
--- RLS: categories
--- ============================================================
-ALTER TABLE categories ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "categories_select" ON categories
-  FOR SELECT USING (auth.uid() = user_id);
-
-CREATE POLICY "categories_insert" ON categories
-  FOR INSERT WITH CHECK (auth.uid() = user_id);
-
-CREATE POLICY "categories_update" ON categories
-  FOR UPDATE USING (auth.uid() = user_id);
-
-CREATE POLICY "categories_delete" ON categories
-  FOR DELETE USING (auth.uid() = user_id);
-
--- ============================================================
--- RLS: expenses
--- ============================================================
+-- Enable RLS on expenses
 ALTER TABLE expenses ENABLE ROW LEVEL SECURITY;
 
+-- 4 policies — users only see and touch their own rows
 CREATE POLICY "expenses_select" ON expenses
   FOR SELECT USING (auth.uid() = user_id);
 
