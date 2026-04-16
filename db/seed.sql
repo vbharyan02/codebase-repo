@@ -1,9 +1,16 @@
 -- Run this AFTER schema.sql and AFTER creating a test user
--- Replace the placeholder UUID below with a real user_id from auth.users
+-- Replace the placeholder UUID below with an actual user id from auth.users
 
-INSERT INTO expenses (id, user_id, title, amount, category, notes, expense_date) VALUES
-  (gen_random_uuid(), '00000000-0000-0000-0000-000000000001', 'Grocery run', 4500, 'Food', 'Weekly groceries from supermarket', '2026-04-01'),
-  (gen_random_uuid(), '00000000-0000-0000-0000-000000000001', 'Uber to airport', 1200, 'Transport', NULL, '2026-04-03'),
-  (gen_random_uuid(), '00000000-0000-0000-0000-000000000001', 'Netflix subscription', 649, 'Entertainment', 'Monthly plan', '2026-04-05'),
-  (gen_random_uuid(), '00000000-0000-0000-0000-000000000001', 'Electricity bill', 3200, 'Utilities', 'April billing cycle', '2026-04-10'),
-  (gen_random_uuid(), '00000000-0000-0000-0000-000000000001', 'Lunch with team', 2100, 'Food', 'Team outing at cafe', '2026-04-15');
+DO $$
+DECLARE
+  test_user_id UUID := '00000000-0000-0000-0000-000000000001';
+BEGIN
+
+INSERT INTO todos (id, user_id, title, description, is_completed, due_date) VALUES
+  (gen_random_uuid(), test_user_id, 'Buy groceries', 'Milk, eggs, bread, and vegetables', false, '2026-04-20'),
+  (gen_random_uuid(), test_user_id, 'Read a book', 'Finish reading "Clean Code"', false, '2026-04-30'),
+  (gen_random_uuid(), test_user_id, 'Morning run', '5km jog around the park', true, '2026-04-17'),
+  (gen_random_uuid(), test_user_id, 'Pay electricity bill', NULL, false, '2026-04-25'),
+  (gen_random_uuid(), test_user_id, 'Call dentist', 'Schedule annual checkup appointment', false, NULL);
+
+END $$;
