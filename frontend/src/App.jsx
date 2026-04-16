@@ -6,8 +6,9 @@ import ProtectedRoute from './components/ProtectedRoute'
 import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
 import DashboardPage from './pages/DashboardPage'
-import TodoListPage from './pages/TodoListPage'
-import TodoDetailPage from './pages/TodoDetailPage'
+import ExpensesListPage from './pages/ExpensesListPage'
+import ExpenseDetailPage from './pages/ExpenseDetailPage'
+import CategoriesListPage from './pages/CategoriesListPage'
 
 export default function App() {
   const { initialize, setSession } = useAuthStore()
@@ -36,18 +37,26 @@ export default function App() {
           }
         />
         <Route
-          path="/todos"
+          path="/expenses"
           element={
             <ProtectedRoute>
-              <TodoListPage />
+              <ExpensesListPage />
             </ProtectedRoute>
           }
         />
         <Route
-          path="/todos/:id"
+          path="/expenses/:id"
           element={
             <ProtectedRoute>
-              <TodoDetailPage />
+              <ExpenseDetailPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/categories"
+          element={
+            <ProtectedRoute>
+              <CategoriesListPage />
             </ProtectedRoute>
           }
         />

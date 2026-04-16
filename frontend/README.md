@@ -1,6 +1,6 @@
-# Todo App — Frontend
+# Expense Tracker — Frontend
 
-A React + Supabase todo application built with Vite and Tailwind CSS. Deployable on Netlify with zero extra servers.
+A React + Supabase expense tracking application built with Vite and Tailwind CSS. Deployable on Netlify with zero extra servers.
 
 ## Prerequisites
 
@@ -52,9 +52,8 @@ The app will be available at `http://localhost:5173`.
 ## Features
 
 - Email/password auth via Supabase Auth
-- Create, view, edit, and delete todos
-- Mark todos as completed
-- Filter by priority (low / medium / high)
-- Filter by status (pending / completed)
-- Dashboard with summary stats
+- Create, view, edit, and delete expenses
+- Organise expenses by category
+- Dashboard with summary stats (total spend, category breakdown, recent expenses)
+- Color-coded categories
 - Mobile-responsive layout

@@ -1,15 +1,15 @@
--- Enable RLS on todos
-ALTER TABLE todos ENABLE ROW LEVEL SECURITY;
+-- Enable RLS on expenses
+ALTER TABLE expenses ENABLE ROW LEVEL SECURITY;
 
 -- 4 policies — users only see and touch their own rows
-CREATE POLICY "todos_select" ON todos
+CREATE POLICY "expenses_select" ON expenses
   FOR SELECT USING (auth.uid() = user_id);
 
-CREATE POLICY "todos_insert" ON todos
+CREATE POLICY "expenses_insert" ON expenses
   FOR INSERT WITH CHECK (auth.uid() = user_id);
 
-CREATE POLICY "todos_update" ON todos
+CREATE POLICY "expenses_update" ON expenses
   FOR UPDATE USING (auth.uid() = user_id);
 
-CREATE POLICY "todos_delete" ON todos
+CREATE POLICY "expenses_delete" ON expenses
   FOR DELETE USING (auth.uid() = user_id);
