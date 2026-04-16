@@ -6,7 +6,7 @@ const useAuthStore = create((set) => ({
   session: null,
   loading: true,
 
-  init: async () => {
+  initialize: async () => {
     const { data: { session } } = await supabase.auth.getSession()
     set({ session, user: session?.user ?? null, loading: false })
   },
@@ -15,7 +15,7 @@ const useAuthStore = create((set) => ({
     set({ session, user: session?.user ?? null, loading: false })
   },
 
-  logout: async () => {
+  signOut: async () => {
     await supabase.auth.signOut()
     set({ session: null, user: null })
   },

@@ -1,42 +1,60 @@
-# Task Manager — Frontend
+# Todo App — Frontend
 
-React + Vite + Supabase + Tailwind frontend for the Task Manager app.
+A React + Supabase todo application built with Vite and Tailwind CSS. Deployable on Netlify with zero extra servers.
 
-## 1. Supabase Setup
+## Prerequisites
 
-1. Create a project at [supabase.com](https://supabase.com).
-2. Run the SQL files from `../../db/` (schema.sql → rls.sql → seed.sql) in the Supabase SQL editor. See `../../db/README.md` for detailed steps.
+- Node.js 18+
+- A Supabase project with the database schema applied (see `../../db/README.md` for SQL steps)
 
-## 2. Environment Variables
+## Setup
 
-Copy `.env.example` to `.env` and fill in your Supabase credentials:
+### 1. Configure Supabase
+
+1. Go to [supabase.com](https://supabase.com) and open your project.
+2. Navigate to **Settings → API**.
+3. Copy your **Project URL** and **anon/public key**.
+
+### 2. Create `.env`
 
 ```bash
 cp .env.example .env
 ```
 
-Find the values in your Supabase project: **Settings → API**
+Fill in your values:
 
 ```
 VITE_SUPABASE_URL=https://your-project.supabase.co
 VITE_SUPABASE_ANON_KEY=your-anon-key
 ```
 
-## 3. Run Locally
+### 3. Run locally
 
 ```bash
 npm install
 npm run dev
 ```
 
-The app runs at `http://localhost:5173`.
+The app will be available at `http://localhost:5173`.
 
-## 4. Netlify Deployment
+## Netlify Deployment
 
-1. Push this repo to GitHub.
-2. Connect the repo in the Netlify dashboard.
-3. Set build command to `npm run build` and publish directory to `dist` (already configured in `netlify.toml`).
-4. Add environment variables in **Netlify → Site settings → Environment variables**:
+1. Push this directory to a GitHub repository.
+2. Connect the repo to Netlify (New site → Import from Git).
+3. Netlify will detect the `netlify.toml` and use:
+   - **Build command:** `npm run build`
+   - **Publish directory:** `dist`
+4. In Netlify dashboard go to **Site settings → Environment variables** and add:
    - `VITE_SUPABASE_URL`
    - `VITE_SUPABASE_ANON_KEY`
-5. Deploy. The `netlify.toml` handles SPA redirects automatically.
+5. Trigger a redeploy. The SPA redirect rule in `netlify.toml` handles client-side routing.
+
+## Features
+
+- Email/password auth via Supabase Auth
+- Create, view, edit, and delete todos
+- Mark todos as completed
+- Filter by priority (low / medium / high)
+- Filter by status (pending / completed)
+- Dashboard with summary stats
+- Mobile-responsive layout
