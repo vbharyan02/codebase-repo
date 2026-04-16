@@ -1,19 +1,19 @@
 import { useEffect } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
-import useAuthStore from './store/authStore'
 import supabase from './lib/supabase'
+import useAuthStore from './store/authStore'
 import ProtectedRoute from './components/ProtectedRoute'
 import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
 import DashboardPage from './pages/DashboardPage'
-import TaskListPage from './pages/TaskListPage'
-import TaskDetailPage from './pages/TaskDetailPage'
+import TodoListPage from './pages/TodoListPage'
+import TodoDetailPage from './pages/TodoDetailPage'
 
 export default function App() {
-  const { init, setSession } = useAuthStore()
+  const { initialize, setSession } = useAuthStore()
 
   useEffect(() => {
-    init()
+    initialize()
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session)
@@ -36,18 +36,18 @@ export default function App() {
           }
         />
         <Route
-          path="/tasks"
+          path="/todos"
           element={
             <ProtectedRoute>
-              <TaskListPage />
+              <TodoListPage />
             </ProtectedRoute>
           }
         />
         <Route
-          path="/tasks/:id"
+          path="/todos/:id"
           element={
             <ProtectedRoute>
-              <TaskDetailPage />
+              <TodoDetailPage />
             </ProtectedRoute>
           }
         />

@@ -1,112 +1,120 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import Layout from '../components/Layout'
-import useAuthStore from '../store/authStore'
+import TodoCard from '../components/TodoCard'
 import supabase from '../lib/supabase'
 
-const STATUS_COLORS = {
-  pending: 'bg-yellow-100 text-yellow-800',
-  in_progress: 'bg-blue-100 text-blue-800',
-  done: 'bg-green-100 text-green-800',
-}
-
 export default function DashboardPage() {
-  const { user } = useAuthStore()
-  const [stats, setStats] = useState({ total: 0, pending: 0, in_progress: 0, done: 0 })
-  const [recent, setRecent] = useState([])
+  const [todos, setTodos] = useState([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
 
   useEffect(() => {
-    const fetchData = async () => {
-      const { data, error } = await supabase
-        .from('tasks')
-        .select('id, title, status, due_date, created_at')
+    const fetchTodos = async () => {
+      setLoading(true)
+      const { data, error: err } = await supabase
+        .from('todos')
+        .select('*')
         .order('created_at', { ascending: false })
+        .limit(5)
 
-      if (!error && data) {
-        setStats({
-          total: data.length,
-          pending: data.filter((t) => t.status === 'pending').length,
-          in_progress: data.filter((t) => t.status === 'in_progress').length,
-          done: data.filter((t) => t.status === 'done').length,
-        })
-        setRecent(data.slice(0, 5))
+      if (err) {
+        setError('Failed to load todos.')
+      } else {
+        setTodos(data)
       }
-
       setLoading(false)
     }
 
-    fetchData()
+    fetchTodos()
   }, [])
 
-  const statCards = [
-    { label: 'Total', value: stats.total, color: 'bg-indigo-50 text-indigo-700' },
-    { label: 'Pending', value: stats.pending, color: 'bg-yellow-50 text-yellow-700' },
-    { label: 'In Progress', value: stats.in_progress, color: 'bg-blue-50 text-blue-700' },
-    { label: 'Done', value: stats.done, color: 'bg-green-50 text-green-700' },
-  ]
+  const handleToggle = async (todo) => {
+    const { error: err } = await supabase
+      .from('todos')
+      .update({ completed: !todo.completed })
+      .eq('id', todo.id)
+
+    if (err) {
+      setError('Failed to update todo.')
+      return
+    }
+    setTodos((prev) =>
+      prev.map((t) => (t.id === todo.id ? { ...t, completed: !t.completed } : t))
+    )
+  }
+
+  const handleDelete = async (id) => {
+    const { error: err } = await supabase.from('todos').delete().eq('id', id)
+    if (err) {
+      setError('Failed to delete todo.')
+      return
+    }
+    setTodos((prev) => prev.filter((t) => t.id !== id))
+  }
+
+  const total = todos.length
+  const completed = todos.filter((t) => t.completed).length
+  const pending = total - completed
+
+  const highPriority = todos.filter((t) => t.priority === 'high' && !t.completed).length
 
   return (
     <Layout>
-      <div className="max-w-4xl mx-auto">
-        <h1 className="text-2xl font-bold text-gray-900 mb-1">Dashboard</h1>
-        <p className="text-sm text-gray-500 mb-6">
-          Welcome back, <span className="font-medium text-gray-700">{user?.email}</span>
-        </p>
+      <div className="max-w-2xl mx-auto">
+        <h1 className="text-2xl font-bold text-gray-800 mb-6">Dashboard</h1>
+
+        {/* Stats */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-8">
+          {[
+            { label: 'Total (recent)', value: total, color: 'indigo' },
+            { label: 'Completed', value: completed, color: 'green' },
+            { label: 'High Priority', value: highPriority, color: 'red' },
+          ].map(({ label, value, color }) => (
+            <div key={label} className="bg-white border rounded-lg p-4 shadow-sm text-center">
+              <p className={`text-3xl font-bold text-${color}-600`}>{value}</p>
+              <p className="text-xs text-gray-500 mt-1">{label}</p>
+            </div>
+          ))}
+        </div>
+
+        {/* Recent todos */}
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-lg font-semibold text-gray-700">Recent Todos</h2>
+          <Link to="/todos" className="text-sm text-indigo-600 hover:underline">
+            View all →
+          </Link>
+        </div>
+
+        {error && (
+          <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-600 text-sm rounded-md">
+            {error}
+          </div>
+        )}
 
         {loading ? (
-          <div className="flex justify-center py-16">
+          <div className="flex justify-center py-12">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600" />
           </div>
+        ) : todos.length === 0 ? (
+          <div className="text-center py-12 text-gray-400 text-sm">
+            No todos yet.{' '}
+            <Link to="/todos" className="text-indigo-600 hover:underline">
+              Create one
+            </Link>
+            .
+          </div>
         ) : (
-          <>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
-              {statCards.map(({ label, value, color }) => (
-                <div key={label} className={`rounded-xl p-5 ${color}`}>
-                  <p className="text-3xl font-bold">{value}</p>
-                  <p className="text-sm font-medium mt-1">{label}</p>
-                </div>
-              ))}
-            </div>
-
-            <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
-              <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
-                <h2 className="text-sm font-semibold text-gray-700">Recent Tasks</h2>
-                <Link to="/tasks" className="text-xs text-indigo-600 hover:text-indigo-800 font-medium">
-                  View all
-                </Link>
-              </div>
-
-              {recent.length === 0 ? (
-                <div className="px-5 py-10 text-center text-sm text-gray-400">
-                  No tasks yet.{' '}
-                  <Link to="/tasks" className="text-indigo-600 hover:underline">
-                    Create one
-                  </Link>
-                </div>
-              ) : (
-                <ul className="divide-y divide-gray-100">
-                  {recent.map((task) => (
-                    <li key={task.id} className="flex items-center gap-3 px-5 py-3">
-                      <Link
-                        to={`/tasks/${task.id}`}
-                        className="flex-1 text-sm font-medium text-gray-800 hover:text-indigo-600 truncate"
-                      >
-                        {task.title}
-                      </Link>
-                      <span
-                        className={`text-xs px-2 py-0.5 rounded-full font-medium whitespace-nowrap ${
-                          STATUS_COLORS[task.status] ?? 'bg-gray-100 text-gray-600'
-                        }`}
-                      >
-                        {task.status.replace('_', ' ')}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          </>
+          <div className="space-y-3">
+            {todos.map((todo) => (
+              <TodoCard
+                key={todo.id}
+                todo={todo}
+                onToggle={handleToggle}
+                onDelete={handleDelete}
+              />
+            ))}
+          </div>
         )}
       </div>
     </Layout>
