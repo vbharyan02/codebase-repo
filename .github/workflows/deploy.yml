@@ -5,9 +5,6 @@ on:
     branches:
       - main
 
-permissions:
-  contents: write
-
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -15,42 +12,29 @@ jobs:
     steps:
       - name: Checkout codebase repo
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          token: ${{ secrets.PROD_REPO_TOKEN }}
 
-      - name: Configure git identity
+      - name: Deploy to taskmaster-prod
+        env:
+          TOKEN: ${{ secrets.PROD_REPO_TOKEN }}
         run: |
           git config --global user.email "pipeline-bot@github.com"
           git config --global user.name "Pipeline Bot"
 
-      - name: Clone prod repo with token
-        run: |
-          echo "Cloning taskmaster-prod..."
-          git clone https://x-access-token:${{ secrets.PROD_REPO_TOKEN }}@github.com/vbharyan02/taskmaster-prod.git prod-repo
-          echo "Clone done."
+          # Clone prod repo using env token
+          git clone https://x-access-token:${TOKEN}@github.com/vbharyan02/taskmaster-prod.git prod-repo
 
-      - name: Clean and copy frontend files
-        run: |
+          # Clean and copy frontend
           rm -rf prod-repo/frontend
           mkdir -p prod-repo/frontend
-          rsync -av \
-            --exclude='.git' \
-            --exclude='node_modules' \
-            --exclude='dist' \
-            frontend/ prod-repo/frontend/
-          echo "Files copied."
+          cp -r frontend/. prod-repo/frontend/
 
-      - name: Commit and push to prod repo
-        run: |
+          # Commit and push
           cd prod-repo
-          git config user.email "pipeline-bot@github.com"
-          git config user.name "Pipeline Bot"
           git add -A
           if git diff --staged --quiet; then
             echo "Nothing to commit."
           else
-            git commit -m "deploy: sync from codebase $(date -u +%Y-%m-%dT%H:%M:%SZ)"
-            git push https://x-access-token:${{ secrets.PROD_REPO_TOKEN }}@github.com/vbharyan02/taskmaster-prod.git HEAD:main
-            echo "Pushed to taskmaster-prod successfully."
+            git commit -m "deploy: sync $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            git push https://x-access-token:${TOKEN}@github.com/vbharyan02/taskmaster-prod.git HEAD:main
+            echo "Deploy successful."
           fi
