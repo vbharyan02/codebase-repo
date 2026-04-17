@@ -20,19 +20,25 @@ jobs:
           git config --global user.email "pipeline-bot@github.com"
           git config --global user.name "Pipeline Bot"
 
-          # Clone prod repo using env token
+          # Clone prod repo
           git clone https://x-access-token:${TOKEN}@github.com/vbharyan02/taskmaster-prod.git prod-repo
 
-          # Clean and copy frontend
-          rm -rf prod-repo/frontend
-          mkdir -p prod-repo/frontend
-          cp -r frontend/. prod-repo/frontend/
+          # Clean prod repo completely except .git
+          find prod-repo -mindepth 1 -maxdepth 1 \
+            ! -name '.git' -exec rm -rf {} +
+
+          # Copy both db and frontend folders
+          cp -r db prod-repo/db
+          cp -r frontend prod-repo/frontend
+
+          # Copy root files if they exist
+          [ -f README.md ] && cp README.md prod-repo/README.md || true
 
           # Commit and push
           cd prod-repo
           git add -A
           if git diff --staged --quiet; then
-            echo "Nothing to commit."
+            echo "Nothing to commit — already up to date."
           else
             git commit -m "deploy: sync $(date -u +%Y-%m-%dT%H:%M:%SZ)"
             git push https://x-access-token:${TOKEN}@github.com/vbharyan02/taskmaster-prod.git HEAD:main
