@@ -1,4 +1,4 @@
-# task-manager — Database Setup
+# fitness-tracker — Database Setup
 
 ## How to run
 
@@ -29,42 +29,19 @@ Then:
 
 ## Table Structure
 
-### `tasks`
+### `workouts`
 
-| Column        | Type        | Nullable | Default             | Notes                         |
-|---------------|-------------|----------|---------------------|-------------------------------|
-| `id`          | UUID        | NO       | `gen_random_uuid()` | Primary key                   |
-| `user_id`     | UUID        | NO       |                     | FK → `auth.users(id)` CASCADE |
-| `title`       | TEXT        | NO       |                     |                               |
-| `description` | TEXT        | YES      |                     |                               |
-| `status`      | TEXT        | NO       |                     | e.g. todo, in_progress, done  |
-| `priority`    | TEXT        | NO       |                     | e.g. low, medium, high        |
-| `due_date`    | DATE        | YES      |                     |                               |
-| `completed`   | BOOLEAN     | NO       |                     |                               |
-| `created_at`  | TIMESTAMPTZ | NO       | `NOW()`             |                               |
-| `updated_at`  | TIMESTAMPTZ | NO       | `NOW()`             | Auto-updated via trigger      |
-
-### `categories`
-
-| Column       | Type        | Nullable | Default             | Notes                         |
-|--------------|-------------|----------|---------------------|-------------------------------|
-| `id`         | UUID        | NO       | `gen_random_uuid()` | Primary key                   |
-| `user_id`    | UUID        | NO       |                     | FK → `auth.users(id)` CASCADE |
-| `name`       | TEXT        | NO       |                     |                               |
-| `color`      | TEXT        | YES      |                     | Hex color code                |
-| `created_at` | TIMESTAMPTZ | NO       | `NOW()`             |                               |
-| `updated_at` | TIMESTAMPTZ | NO       | `NOW()`             | Auto-updated via trigger      |
-
-### `task_categories`
-
-| Column        | Type        | Nullable | Default             | Notes                           |
-|---------------|-------------|----------|---------------------|---------------------------------|
-| `id`          | UUID        | NO       | `gen_random_uuid()` | Primary key                     |
-| `user_id`     | UUID        | NO       |                     | FK → `auth.users(id)` CASCADE   |
-| `task_id`     | UUID        | NO       |                     | FK → `tasks(id)` CASCADE        |
-| `category_id` | UUID        | NO       |                     | FK → `categories(id)` CASCADE   |
-| `created_at`  | TIMESTAMPTZ | NO       | `NOW()`             |                                 |
-| `updated_at`  | TIMESTAMPTZ | NO       | `NOW()`             | Auto-updated via trigger        |
+| Column          | Type        | Nullable | Default             | Notes                         |
+|-----------------|-------------|----------|---------------------|-------------------------------|
+| `id`            | UUID        | NO       | `gen_random_uuid()` | Primary key                   |
+| `user_id`       | UUID        | NO       |                     | FK → `auth.users(id)` CASCADE |
+| `exercise_name` | TEXT        | NO       |                     | Name of the exercise          |
+| `sets`          | INTEGER     | NO       |                     | Number of sets                |
+| `reps`          | INTEGER     | NO       |                     | Number of reps per set        |
+| `weight`        | INTEGER     | NO       |                     | Weight in kg (0 for bodyweight)|
+| `date`          | DATE        | NO       |                     | Date the workout was performed|
+| `created_at`    | TIMESTAMPTZ | NO       | `NOW()`             |                               |
+| `updated_at`    | TIMESTAMPTZ | NO       | `NOW()`             | Auto-updated via trigger      |
 
 ---
 
@@ -72,29 +49,11 @@ Then:
 
 All policies restrict access so that **each user can only see and modify their own rows** (`auth.uid() = user_id`).
 
-### `tasks`
+### `workouts`
 
-| Policy           | Operation | Rule                   |
-|------------------|-----------|------------------------|
-| `tasks_select`   | SELECT    | `auth.uid() = user_id` |
-| `tasks_insert`   | INSERT    | `auth.uid() = user_id` |
-| `tasks_update`   | UPDATE    | `auth.uid() = user_id` |
-| `tasks_delete`   | DELETE    | `auth.uid() = user_id` |
-
-### `categories`
-
-| Policy                | Operation | Rule                   |
-|-----------------------|-----------|------------------------|
-| `categories_select`   | SELECT    | `auth.uid() = user_id` |
-| `categories_insert`   | INSERT    | `auth.uid() = user_id` |
-| `categories_update`   | UPDATE    | `auth.uid() = user_id` |
-| `categories_delete`   | DELETE    | `auth.uid() = user_id` |
-
-### `task_categories`
-
-| Policy                     | Operation | Rule                   |
-|----------------------------|-----------|------------------------|
-| `task_categories_select`   | SELECT    | `auth.uid() = user_id` |
-| `task_categories_insert`   | INSERT    | `auth.uid() = user_id` |
-| `task_categories_update`   | UPDATE    | `auth.uid() = user_id` |
-| `task_categories_delete`   | DELETE    | `auth.uid() = user_id` |
+| Policy             | Operation | Rule                   |
+|--------------------|-----------|------------------------|
+| `workouts_select`  | SELECT    | `auth.uid() = user_id` |
+| `workouts_insert`  | INSERT    | `auth.uid() = user_id` |
+| `workouts_update`  | UPDATE    | `auth.uid() = user_id` |
+| `workouts_delete`  | DELETE    | `auth.uid() = user_id` |
