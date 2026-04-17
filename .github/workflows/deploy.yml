@@ -5,6 +5,9 @@ on:
     branches:
       - main
 
+permissions:
+  contents: write
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -13,44 +16,41 @@ jobs:
       - name: Checkout codebase repo
         uses: actions/checkout@v4
         with:
-          path: codebase
+          fetch-depth: 0
+          token: ${{ secrets.PROD_REPO_TOKEN }}
 
-      - name: Clone production repo
+      - name: Configure git identity
         run: |
-          echo "Deploying to production repo..."
-          git clone https://x-access-token:${{ secrets.PROD_REPO_TOKEN }}@github.com/vbharyan02/taskmaster-prod.git prod
+          git config --global user.email "pipeline-bot@github.com"
+          git config --global user.name "Pipeline Bot"
 
-      - name: Clean production repo (keep .git only)
+      - name: Clone prod repo with token
         run: |
-          cd prod
-          find . -mindepth 1 -maxdepth 1 ! -name '.git' -exec rm -rf {} +
-          echo "Old files removed"
+          echo "Cloning taskmaster-prod..."
+          git clone https://x-access-token:${{ secrets.PROD_REPO_TOKEN }}@github.com/vbharyan02/taskmaster-prod.git prod-repo
+          echo "Clone done."
 
-      - name: Copy frontend files (exclude node_modules and .env)
+      - name: Clean and copy frontend files
         run: |
+          rm -rf prod-repo/frontend
+          mkdir -p prod-repo/frontend
           rsync -av \
-            --exclude='node_modules' \
-            --exclude='.env' \
             --exclude='.git' \
-            codebase/frontend/ prod/
-          echo "Frontend files copied"
+            --exclude='node_modules' \
+            --exclude='dist' \
+            frontend/ prod-repo/frontend/
+          echo "Files copied."
 
-      - name: Write .gitignore in prod repo
+      - name: Commit and push to prod repo
         run: |
-          cat > prod/.gitignore << 'EOF'
-          node_modules/
-          dist/
-          .env
-          .DS_Store
-          EOF
-
-      - name: Commit and push to production repo
-        run: |
-          cd prod
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add .
-          git diff --cached --quiet && echo "Nothing to commit — already up to date." && exit 0
-          git commit -m "deploy: auto sync from codebase"
-          git push origin main
-          echo "Deployment complete"
+          cd prod-repo
+          git config user.email "pipeline-bot@github.com"
+          git config user.name "Pipeline Bot"
+          git add -A
+          if git diff --staged --quiet; then
+            echo "Nothing to commit."
+          else
+            git commit -m "deploy: sync from codebase $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            git push https://x-access-token:${{ secrets.PROD_REPO_TOKEN }}@github.com/vbharyan02/taskmaster-prod.git HEAD:main
+            echo "Pushed to taskmaster-prod successfully."
+          fi
