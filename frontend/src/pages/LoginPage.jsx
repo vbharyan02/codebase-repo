@@ -12,8 +12,8 @@ export default function LoginPage() {
     e.preventDefault()
     setError('')
     const { error } = await supabase.auth.signInWithPassword({ email, password })
-    if (error) setError(error.message)
-    else navigate('/')
+    if (error) { setError(error.message); return }
+    navigate('/')
   }
 
   return (

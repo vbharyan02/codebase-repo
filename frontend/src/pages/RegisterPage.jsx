@@ -14,9 +14,12 @@ export default function RegisterPage() {
     setError('')
     setMessage('')
     const { data, error } = await supabase.auth.signUp({ email, password })
-    if (error) setError(error.message)
-    else if (data.session) navigate('/')
-    else setMessage('Check your email to confirm your account.')
+    if (error) { setError(error.message); return }
+    if (data?.session) {
+      navigate('/')
+    } else {
+      setMessage('Check your email for a confirmation link.')
+    }
   }
 
   return (

@@ -1,0 +1,56 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout codebase repo
+        uses: actions/checkout@v4
+        with:
+          path: codebase
+
+      - name: Clone production repo
+        run: |
+          echo "Deploying to production repo..."
+          git clone https://x-access-token:${{ secrets.PROD_REPO_TOKEN }}@github.com/vbharyan02/taskmaster-prod.git prod
+
+      - name: Clean production repo (keep .git only)
+        run: |
+          cd prod
+          find . -mindepth 1 -maxdepth 1 ! -name '.git' -exec rm -rf {} +
+          echo "Old files removed"
+
+      - name: Copy frontend files (exclude node_modules and .env)
+        run: |
+          rsync -av \
+            --exclude='node_modules' \
+            --exclude='.env' \
+            --exclude='.git' \
+            codebase/frontend/ prod/
+          echo "Frontend files copied"
+
+      - name: Write .gitignore in prod repo
+        run: |
+          cat > prod/.gitignore << 'EOF'
+          node_modules/
+          dist/
+          .env
+          .DS_Store
+          EOF
+
+      - name: Commit and push to production repo
+        run: |
+          cd prod
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add .
+          git diff --cached --quiet && echo "Nothing to commit — already up to date." && exit 0
+          git commit -m "deploy: auto sync from codebase"
+          git push origin main
+          echo "Deployment complete"
